@@ -23,21 +23,30 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'));
 
 
-app.get('/', 
-function(req, res) {
-  res.render('index');
-});
 
 app.get('/create', 
 function(req, res) {
-  res.render('index');
+  if(req.session === undefined){
+    res.redirect('/login');
+  } else {
+    res.render('index');
+  }
 });
 
 app.get('/links', 
 function(req, res) {
-  Links.reset().fetch().then(function(links) {
-    res.send(200, links.models);
-  });
+  if(req.session === undefined){
+    res.redirect('/login');
+  } else {
+    Links.reset().fetch().then(function(links) {
+      res.send(200, links.models);
+    });
+  }
+});
+
+app.get('/login',
+function(req,res){
+  res.render('login');
 });
 
 app.post('/links', 
@@ -75,8 +84,61 @@ function(req, res) {
 /************************************************************/
 // Write your authentication routes here
 /************************************************************/
+app.get('/', 
+function(req, res) {
+  if(req.session === undefined){
+    res.redirect('/login');
+  } else {
+    res.render('index');
+  }
+});
+
+app.get('/signup',
+function(req, res) {
+  res.render('signup');
+});
+
+// app.post('/signup',function(req, res) {
+//   new User({
+//     'username': req.body.username,
+//     'password': req.body.password
+//   }).save().then(function(){
+//     res.end();
+//   })
+// });
+
+// app.post('/login', function(req, res){
+//   // db.knex('users')
+//   //   .where('username', '=', req.body.username)
+//   //   .then(function(user) {
+//   //     console.log(user);
+//   //   })
+//   //   .then(function(){
+//   //     res.end();
+//   //   });
+// })
+
+// model
+//   .query('where', 'other_id', '=', '5')
+//   .fetch()
+//   .then(function(model) {
+//     // ...
+//   });
 
 
+// new User({
+//           'username': 'Phillip',
+//           'password': 'Phillip'
+//       }).save().then(function(){
+//         var options = {
+//           'method': 'POST',
+//           'followAllRedirects': true,
+//           'uri': 'http://127.0.0.1:4568/login',
+//           'json': {
+//             'username': 'Phillip',
+//             'password': 'Phillip'
+//           }
+//         };
 
 /************************************************************/
 // Handle the wildcard route last - if all other routes fail
