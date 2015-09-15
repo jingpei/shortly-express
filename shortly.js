@@ -2,6 +2,7 @@ var express = require('express');
 var util = require('./lib/utility');
 var partials = require('express-partials');
 var bodyParser = require('body-parser');
+var expressSession = require('express-session');
 
 
 var db = require('./app/config');
@@ -10,6 +11,7 @@ var User = require('./app/models/user');
 var Links = require('./app/collections/links');
 var Link = require('./app/models/link');
 var Click = require('./app/models/click');
+
 
 var app = express();
 
@@ -21,7 +23,6 @@ app.use(bodyParser.json());
 // Parse forms (signup/login)
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'));
-
 
 
 app.get('/create', 
@@ -98,47 +99,34 @@ function(req, res) {
   res.render('signup');
 });
 
-// app.post('/signup',function(req, res) {
-//   new User({
-//     'username': req.body.username,
-//     'password': req.body.password
-//   }).save().then(function(){
-//     res.end();
-//   })
-// });
+app.post('/signup',function(req, res) {
+  new User({
+    'username': req.body.username,
+    'password': req.body.password
+  }).save().then(function(){
+    res.end();
+  })
+});
 
-// app.post('/login', function(req, res){
-//   // db.knex('users')
-//   //   .where('username', '=', req.body.username)
-//   //   .then(function(user) {
-//   //     console.log(user);
-//   //   })
-//   //   .then(function(){
-//   //     res.end();
-//   //   });
-// })
-
-// model
-//   .query('where', 'other_id', '=', '5')
-//   .fetch()
-//   .then(function(model) {
-//     // ...
-//   });
-
-
-// new User({
-//           'username': 'Phillip',
-//           'password': 'Phillip'
-//       }).save().then(function(){
-//         var options = {
-//           'method': 'POST',
-//           'followAllRedirects': true,
-//           'uri': 'http://127.0.0.1:4568/login',
-//           'json': {
-//             'username': 'Phillip',
-//             'password': 'Phillip'
-//           }
-//         };
+app.post('/login', function(req, res){
+  db.knex('users')
+    .where({
+      username: req.body.username,
+      password: req.body.password
+    })
+    .then(function(user) {
+      if (user.length === 1){
+        app.use(expressSession({secret:'shh-its-a-secret-(token)'}));
+        req.session.userName = req.body.username;
+        res.redirect('/');
+      } else {
+        //give some error?
+      }
+    })
+    .then(function(){
+      res.end();
+    });
+})
 
 /************************************************************/
 // Handle the wildcard route last - if all other routes fail
