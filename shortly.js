@@ -27,6 +27,19 @@ app.use(express.static(__dirname + '/public'));
 
 app.use(session({secret:'shh-its-a-secret-(token)'}));
 
+/************************************************************/
+// GET Requests
+/************************************************************/
+
+app.get('/', 
+function(req, res) {
+  if(req.session.userName === undefined){
+    res.redirect('/login');
+  } else {
+    res.render('index');
+  }
+});
+
 app.get('/create', 
 function(req, res) {
   if(req.session.userName === undefined){
@@ -84,26 +97,20 @@ function(req, res) {
   });
 });
 
-/************************************************************/
-// Write your authentication routes here
-/************************************************************/
-var checkUser = function(req, res) {
-  new User()
-};
-
-app.get('/', 
-function(req, res) {
-  if(req.session.userName === undefined){
-    res.redirect('/login');
-  } else {
-    res.render('index');
-  }
-});
-
 app.get('/signup',
 function(req, res) {
   res.render('signup');
 });
+
+app.get('/logout',
+function(req, res) {
+  req.session.destroy();
+  res.redirect('/');
+});
+
+/************************************************************/
+// POST requests
+/************************************************************/
 
 app.post('/signup',function(req, res) {
   new User({
@@ -118,6 +125,10 @@ app.post('/signup',function(req, res) {
 app.post('/login', function(req, res){
   login(req, res);
 })
+
+var checkUser = function(req, res) {
+  new User()
+};
 
 var login = function(req, res){
   new User({
