@@ -2,7 +2,8 @@ var express = require('express');
 var util = require('./lib/utility');
 var partials = require('express-partials');
 var bodyParser = require('body-parser');
-var expressSession = require('express-session');
+var session = require('express-session');
+var bcrypt = require('bcrypt-nodejs');
 
 
 var db = require('./app/config');
@@ -24,10 +25,11 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'));
 
+app.use(session({secret:'shh-its-a-secret-(token)'}));
 
 app.get('/create', 
 function(req, res) {
-  if(req.session === undefined){
+  if(req.session.userName === undefined){
     res.redirect('/login');
   } else {
     res.render('index');
@@ -36,7 +38,7 @@ function(req, res) {
 
 app.get('/links', 
 function(req, res) {
-  if(req.session === undefined){
+  if(req.session.userName === undefined){
     res.redirect('/login');
   } else {
     Links.reset().fetch().then(function(links) {
@@ -85,9 +87,13 @@ function(req, res) {
 /************************************************************/
 // Write your authentication routes here
 /************************************************************/
+var checkUser = function(req, res) {
+  new User()
+};
+
 app.get('/', 
 function(req, res) {
-  if(req.session === undefined){
+  if(req.session.userName === undefined){
     res.redirect('/login');
   } else {
     res.render('index');
@@ -103,31 +109,27 @@ app.post('/signup',function(req, res) {
   new User({
     'username': req.body.username,
     'password': req.body.password
-  }).save().then(function(){
-    res.end();
-  })
+  }).save()
+    .then(function(){
+      login(req, res);
+    });
 });
 
 app.post('/login', function(req, res){
-  db.knex('users')
-    .where({
-      username: req.body.username,
-      password: req.body.password
-    })
-    .then(function(user) {
-      if (user.length === 1){
-        app.use(expressSession({secret:'shh-its-a-secret-(token)'}));
-        req.session.userName = req.body.username;
-        res.redirect('/');
-      } else {
-        //give some error?
-      }
-    })
-    .then(function(){
-      res.end();
-    });
+  login(req, res);
 })
 
+var login = function(req, res){
+  new User({
+    'username': req.body.username,
+  }).fetch()
+  .then(function(user){
+    if(bcrypt.compareSync(req.body.password, user.attributes.password)){
+      req.session.userName = req.body.username;   
+    }
+    res.redirect('/');
+  });
+}
 /************************************************************/
 // Handle the wildcard route last - if all other routes fail
 // assume the route is a short code and try and handle it here.

@@ -40,10 +40,10 @@ describe('', function() {
       .del()
       .catch(function(error) {
         // uncomment when writing authentication tests
-        // throw {
-        //   type: 'DatabaseError',
-        //   message: 'Failed to create test setup data'
-        // };
+        throw {
+          type: 'DatabaseError',
+          message: 'Failed to create test setup data'
+        };
       });
 
     // delete user Phillip from db so it can be created later for the test
@@ -52,14 +52,14 @@ describe('', function() {
       .del()
       .catch(function(error) {
         // uncomment when writing authentication tests
-        // throw {
-        //   type: 'DatabaseError',
-        //   message: 'Failed to create test setup data'
-        // };
+        throw {
+          type: 'DatabaseError',
+          message: 'Failed to create test setup data'
+        };
       });
   });
 
-  describe('Link creation:', function(){
+  describe('Link creation:', function(done){
 
     var requestWithSession = request.defaults({jar: true});
       // create a user that we can then log-in with
@@ -292,9 +292,9 @@ describe('', function() {
           'username': 'Phillip',
           'password': 'Phillip'
       }).save().then(function(){
-        done()
+        done();
       });
-    })
+    });
 
     it('Logs in existing users', function(done) {
       var options = {
@@ -323,6 +323,7 @@ describe('', function() {
       };
 
       requestWithSession(options, function(error, res, body) {
+        console.log("header: ", res.headers.location);
         expect(res.headers.location).to.equal('/login');
         done();
       });
